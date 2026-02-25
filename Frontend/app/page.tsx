@@ -19,8 +19,9 @@ import {
   InputBase,
   IconButton,
   InputAdornment,
+  useTheme,
 } from "@mui/material";
-import BatteryTable from "./components/BatteryTable";
+import BatteryTable from "./components/BatteryTable"; // Adjust path if needed
 import axios from "axios";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import ErrorRoundedIcon from "@mui/icons-material/ErrorRounded";
@@ -28,6 +29,9 @@ import AssessmentRoundedIcon from "@mui/icons-material/AssessmentRounded";
 import BatteryChargingFullRoundedIcon from "@mui/icons-material/BatteryChargingFullRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import ClearRoundedIcon from "@mui/icons-material/ClearRounded";
+import DarkModeRoundedIcon from "@mui/icons-material/DarkModeRounded";
+import LightModeRoundedIcon from "@mui/icons-material/LightModeRounded";
+import { ThemeContextProvider, useColorMode } from "./ThemeContext"; // Import the context
 
 interface Metrics {
   total_batteries: number;
@@ -35,7 +39,10 @@ interface Metrics {
   ng_count: number;
 }
 
-const App: React.FC = () => {
+// Create an inner component to use the Theme Hook
+const DashboardContent: React.FC = () => {
+  const theme = useTheme();
+  const { toggleColorMode, mode } = useColorMode();
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -43,12 +50,10 @@ const App: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
 
-  // Debounce search to avoid too many API calls
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm);
     }, 500);
-
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
@@ -84,9 +89,7 @@ const App: React.FC = () => {
         justifyContent="center"
         alignItems="center"
         height="100vh"
-        sx={{
-          background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-        }}
+        sx={{ bgcolor: "background.default" }}
       >
         <Paper
           elevation={24}
@@ -96,28 +99,12 @@ const App: React.FC = () => {
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            background: "rgba(255, 255, 255, 0.95)",
-            backdropFilter: "blur(10px)",
+            bgcolor: "background.paper",
           }}
         >
-          <CircularProgress
-            size={60}
-            thickness={4}
-            sx={{
-              color: "#667eea",
-              mb: 3,
-            }}
-          />
-          <Typography
-            variant="h6"
-            fontWeight={600}
-            color="#2d3748"
-            gutterBottom
-          >
+          <CircularProgress size={60} thickness={4} sx={{ color: "primary.main", mb: 3 }} />
+          <Typography variant="h6" fontWeight={600} color="text.primary" gutterBottom>
             Loading Dashboard
-          </Typography>
-          <Typography variant="body2" color="#718096">
-            Please wait while we fetch the latest data...
           </Typography>
         </Paper>
       </Box>
@@ -131,7 +118,9 @@ const App: React.FC = () => {
         alignItems="center"
         height="100vh"
         sx={{
-          background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+          background: mode === 'light' 
+            ? "linear-gradient(135deg, #667eea 0%, #764ba2 100%)" 
+            : "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)",
         }}
       >
         <Paper
@@ -141,23 +130,15 @@ const App: React.FC = () => {
             borderRadius: 4,
             textAlign: "center",
             maxWidth: 400,
-            background: "rgba(255, 255, 255, 0.95)",
+            bgcolor: "background.paper",
           }}
         >
-          <ErrorRoundedIcon sx={{ fontSize: 80, color: "#f56565", mb: 2 }} />
-          <Typography
-            variant="h5"
-            fontWeight={700}
-            color="#2d3748"
-            gutterBottom
-          >
+          <ErrorRoundedIcon sx={{ fontSize: 80, color: "error.main", mb: 2 }} />
+          <Typography variant="h5" fontWeight={700} color="text.primary" gutterBottom>
             Connection Error
           </Typography>
-          <Typography variant="body1" color="#718096" paragraph>
+          <Typography variant="body1" color="text.secondary" paragraph>
             {error}
-          </Typography>
-          <Typography variant="body2" color="#a0aec0">
-            Please check your connection and refresh the page
           </Typography>
         </Paper>
       </Box>
@@ -166,20 +147,20 @@ const App: React.FC = () => {
   return (
     <Box
       sx={{
-        background: "linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%)",
+        bgcolor: "background.default",
         minHeight: "100vh",
         pb: 6,
-        fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, sans-serif',
+        transition: "background-color 0.3s ease",
       }}
     >
       {/* Premium Header */}
       <Paper
         elevation={0}
         sx={{
-          background: "rgba(255, 255, 255, 0.8)",
+          bgcolor: alpha(theme.palette.background.paper, 0.8),
           backdropFilter: "blur(10px)",
           borderBottom: "1px solid",
-          borderColor: alpha("#e2e8f0", 0.5),
+          borderColor: "divider",
           position: "sticky",
           top: 0,
           zIndex: 1000,
@@ -197,10 +178,10 @@ const App: React.FC = () => {
             <Box display="flex" alignItems="center" gap={2}>
               <Avatar
                 sx={{
-                  bgcolor: "#667eea",
+                  bgcolor: "primary.main",
                   width: 48,
                   height: 48,
-                  boxShadow: "0 10px 20px -5px rgba(102, 126, 234, 0.3)",
+                  boxShadow: `0 10px 20px -5px ${alpha(theme.palette.primary.main, 0.3)}`,
                 }}
               >
                 <AssessmentRoundedIcon />
@@ -210,8 +191,7 @@ const App: React.FC = () => {
                   variant="h4"
                   fontWeight="800"
                   sx={{
-                    background:
-                      "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                    background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
                     WebkitBackgroundClip: "text",
                     WebkitTextFillColor: "transparent",
                     letterSpacing: "-0.02em",
@@ -219,7 +199,7 @@ const App: React.FC = () => {
                 >
                   Inspection Analytics
                 </Typography>
-                <Typography variant="body2" color="#718096">
+                <Typography variant="body2" color="text.secondary">
                   Real-time battery inspection monitoring system
                 </Typography>
               </Box>
@@ -236,25 +216,25 @@ const App: React.FC = () => {
                   width: 300,
                   borderRadius: 3,
                   border: "1px solid",
-                  borderColor: alpha("#667eea", 0.2),
-                  bgcolor: alpha("#ffffff", 0.9),
+                  borderColor: alpha(theme.palette.primary.main, 0.2),
+                  bgcolor: alpha(theme.palette.background.paper, mode === 'dark' ? 1 : 0.9),
                   transition: "all 0.3s ease",
                   "&:focus-within": {
-                    borderColor: "#667eea",
-                    boxShadow: "0 0 0 3px rgba(102, 126, 234, 0.1)",
+                    borderColor: "primary.main",
+                    boxShadow: `0 0 0 3px ${alpha(theme.palette.primary.main, 0.1)}`,
                     width: 350,
                   },
                 }}
               >
                 <InputBase
-                  sx={{ ml: 2, flex: 1, fontSize: "0.95rem" }}
+                  sx={{ ml: 2, flex: 1, fontSize: "0.95rem", color: "text.primary" }}
                   placeholder="Search by ID or timestamp..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   startAdornment={
                     <InputAdornment position="start">
                       <SearchRoundedIcon
-                        sx={{ color: alpha("#667eea", 0.6), fontSize: 20 }}
+                        sx={{ color: alpha(theme.palette.primary.main, 0.6), fontSize: 20 }}
                       />
                     </InputAdornment>
                   }
@@ -267,7 +247,7 @@ const App: React.FC = () => {
                           sx={{ mr: 1 }}
                         >
                           <ClearRoundedIcon
-                            sx={{ fontSize: 18, color: "#a0aec0" }}
+                            sx={{ fontSize: 18, color: "text.secondary" }}
                           />
                         </IconButton>
                       </InputAdornment>
@@ -281,13 +261,18 @@ const App: React.FC = () => {
                 label={`Last updated: ${new Date().toLocaleTimeString()}`}
                 size="small"
                 sx={{
-                  bgcolor: alpha("#667eea", 0.1),
-                  color: "#4a5568",
+                  bgcolor: alpha(theme.palette.primary.main, 0.1),
+                  color: "text.secondary",
                   border: "1px solid",
-                  borderColor: alpha("#667eea", 0.2),
+                  borderColor: alpha(theme.palette.primary.main, 0.2),
                   fontWeight: 500,
                 }}
               />
+
+              {/* Theme Toggle */}
+              <IconButton onClick={toggleColorMode} color="inherit" sx={{ bgcolor: alpha(theme.palette.text.primary, 0.05) }}>
+                {mode === 'dark' ? <LightModeRoundedIcon color="warning" /> : <DarkModeRoundedIcon color="action" />}
+              </IconButton>
             </Box>
           </Box>
         </Container>
@@ -296,55 +281,35 @@ const App: React.FC = () => {
       <Container maxWidth="xl" sx={{ mt: 4 }}>
         {/* Stat Cards */}
         <Grid container spacing={3} mb={5}>
-          <Grid size={{ xs: 12, sm: 4 }}>
+          {/* Total Scanned */}
+          <Grid size={{xs:12, sm:4}}>
             <Zoom in={true} style={{ transitionDelay: "100ms" }}>
               <Card
                 sx={{
                   borderRadius: 4,
-                  boxShadow: "0 20px 40px -15px rgba(0,0,0,0.1)",
+                  boxShadow: theme.shadows[2],
                   border: "1px solid",
-                  borderColor: alpha("#e2e8f0", 0.5),
-                  background: "rgba(255, 255, 255, 0.9)",
-                  backdropFilter: "blur(10px)",
+                  borderColor: "divider",
+                  bgcolor: "background.paper",
                   transition: "all 0.3s ease",
                   cursor: "pointer",
-
                   "&:hover": {
                     transform: "translateY(-8px) scale(1.02)",
-                    boxShadow: "0 30px 60px -15px rgba(0,0,0,0.2)",
-                    borderColor: alpha("#6366f1", 0.4),
+                    borderColor: alpha(theme.palette.primary.main, 0.4),
                   },
                 }}
               >
                 <CardContent sx={{ p: 3 }}>
-                  <Box
-                    display="flex"
-                    alignItems="center"
-                    justifyContent="space-between"
-                  >
+                  <Box display="flex" alignItems="center" justifyContent="space-between">
                     <Box>
-                      <Typography
-                        variant="overline"
-                        sx={{ color: "#718096", fontWeight: 600 }}
-                      >
+                      <Typography variant="overline" sx={{ color: "text.secondary", fontWeight: 600 }}>
                         Total Scanned
                       </Typography>
-                      <Typography
-                        variant="h3"
-                        fontWeight="800"
-                        sx={{ color: "#2d3748", mt: 1 }}
-                      >
+                      <Typography variant="h3" fontWeight="800" sx={{ color: "text.primary", mt: 1 }}>
                         {metrics?.total_batteries.toLocaleString()}
                       </Typography>
                     </Box>
-                    <Avatar
-                      sx={{
-                        bgcolor: alpha("#667eea", 0.1),
-                        color: "#667eea",
-                        width: 70,
-                        height: 70,
-                      }}
-                    >
+                    <Avatar sx={{ bgcolor: alpha(theme.palette.primary.main, 0.1), color: "primary.main", width: 70, height: 70 }}>
                       <AssessmentRoundedIcon sx={{ fontSize: 35 }} />
                     </Avatar>
                   </Box>
@@ -353,58 +318,37 @@ const App: React.FC = () => {
             </Zoom>
           </Grid>
 
-          <Grid size={{ xs: 12, sm: 4 }}>
+          {/* Passed */}
+          <Grid size={{xs:12, sm:4}}>
             <Zoom in={true} style={{ transitionDelay: "200ms" }}>
               <Card
                 sx={{
                   borderRadius: 4,
-                  boxShadow: "0 20px 40px -15px rgba(0,0,0,0.1)",
                   border: "1px solid",
-                  borderColor: alpha("#e2e8f0", 0.5),
-                  background: "rgba(255, 255, 255, 0.9)",
-                  backdropFilter: "blur(10px)",
-                   transition: 'all 0.3s ease',
-        cursor: 'pointer',
-
-        '&:hover': {
-          transform: 'translateY(-8px) scale(1.02)',
-          boxShadow: '0 30px 60px -15px rgba(0,0,0,0.2)',
-          borderColor: alpha('#6366f1', 0.4),
-        },
+                  borderColor: "divider",
+                  bgcolor: "background.paper",
+                  transition: 'all 0.3s ease',
+                  cursor: 'pointer',
+                  '&:hover': {
+                    transform: 'translateY(-8px) scale(1.02)',
+                    borderColor: alpha(theme.palette.success.main, 0.4),
+                  },
                 }}
               >
                 <CardContent sx={{ p: 3 }}>
-                  <Box
-                    display="flex"
-                    alignItems="center"
-                    justifyContent="space-between"
-                  >
+                  <Box display="flex" alignItems="center" justifyContent="space-between">
                     <Box>
-                      <Typography
-                        variant="overline"
-                        sx={{ color: "#718096", fontWeight: 600 }}
-                      >
+                      <Typography variant="overline" sx={{ color: "text.secondary", fontWeight: 600 }}>
                         Passed (OK)
                       </Typography>
-                      <Typography
-                        variant="h3"
-                        fontWeight="800"
-                        sx={{ color: "#48bb78" }}
-                      >
+                      <Typography variant="h3" fontWeight="800" sx={{ color: "success.main" }}>
                         {metrics?.ok_count.toLocaleString()}
                       </Typography>
-                      <Typography variant="body2" color="#718096" mt={1}>
+                      <Typography variant="body2" color="text.secondary" mt={1}>
                         {calculatePercentage(metrics?.ok_count || 0)}% of total
                       </Typography>
                     </Box>
-                    <Avatar
-                      sx={{
-                        bgcolor: alpha("#48bb78", 0.1),
-                        color: "#48bb78",
-                        width: 70,
-                        height: 70,
-                      }}
-                    >
+                    <Avatar sx={{ bgcolor: alpha(theme.palette.success.main, 0.1), color: "success.main", width: 70, height: 70 }}>
                       <CheckCircleRoundedIcon sx={{ fontSize: 35 }} />
                     </Avatar>
                   </Box>
@@ -413,181 +357,94 @@ const App: React.FC = () => {
             </Zoom>
           </Grid>
 
-          <Grid size={{ xs: 12, sm: 4 }} sx={{ overflow: 'visible' }}>
-  <Zoom in={true} style={{ transitionDelay: "300ms" }}>
-    <Box
-      sx={{
-        transition: 'transform 0.3s ease',
-        cursor: 'pointer',
-        '&:hover': {
-          transform: 'scale(1.02)',
-        },
-      }}
-    >
-      <Card
-        sx={{
-          borderRadius: 4,
-          boxShadow: "0 20px 40px -15px rgba(0,0,0,0.1)",
-          border: "1px solid",
-          borderColor: alpha("#e2e8f0", 0.5),
-          background: "rgba(255, 255, 255, 0.9)",
-          backdropFilter: "blur(10px)",
-          transition: 'box-shadow 0.3s ease, border-color 0.3s ease',
-
-          '&:hover': {
-            boxShadow: '0 30px 60px -15px rgba(0,0,0,0.2)',
-            borderColor: alpha('#6366f1', 0.4),
-          },
-        }}
-      >
+          {/* Failed */}
+          <Grid size={{xs:12, sm:4}}>
+            <Zoom in={true} style={{ transitionDelay: "300ms" }}>
+              <Card
+                sx={{
+                  borderRadius: 4,
+                  border: "1px solid",
+                  borderColor: "divider",
+                  bgcolor: "background.paper",
+                  transition: 'all 0.3s ease',
+                  cursor: 'pointer',
+                  '&:hover': {
+                    transform: 'translateY(-8px) scale(1.02)',
+                    borderColor: alpha(theme.palette.error.main, 0.4),
+                  },
+                }}
+              >
                 <CardContent sx={{ p: 3 }}>
-                  <Box
-                    display="flex"
-                    alignItems="center"
-                    justifyContent="space-between"
-                  >
+                  <Box display="flex" alignItems="center" justifyContent="space-between">
                     <Box>
-                      <Typography
-                        variant="overline"
-                        sx={{ color: "#718096", fontWeight: 600 }}
-                      >
+                      <Typography variant="overline" sx={{ color: "text.secondary", fontWeight: 600 }}>
                         Failed (NG)
                       </Typography>
-                      <Typography
-                        variant="h3"
-                        fontWeight="800"
-                        sx={{ color: "#f56565" }}
-                      >
+                      <Typography variant="h3" fontWeight="800" sx={{ color: "error.main" }}>
                         {metrics?.ng_count.toLocaleString()}
                       </Typography>
-                      <Typography variant="body2" color="#718096" mt={1}>
+                      <Typography variant="body2" color="text.secondary" mt={1}>
                         {calculatePercentage(metrics?.ng_count || 0)}% of total
                       </Typography>
                     </Box>
-                    <Avatar
-                      sx={{
-                        bgcolor: alpha("#f56565", 0.1),
-                        color: "#f56565",
-                        width: 70,
-                        height: 70,
-                      }}
-                    >
+                    <Avatar sx={{ bgcolor: alpha(theme.palette.error.main, 0.1), color: "error.main", width: 70, height: 70 }}>
                       <ErrorRoundedIcon sx={{ fontSize: 35 }} />
                     </Avatar>
                   </Box>
                 </CardContent>
               </Card>
-              </Box>
             </Zoom>
           </Grid>
         </Grid>
-
-        {/* Active Search Indicator */}
-        {debouncedSearchTerm && (
-          <Fade in={true}>
-            <Box sx={{ mb: 2, display: "flex", alignItems: "center", gap: 1 }}>
-              <Chip
-                label={`Searching for: "${debouncedSearchTerm}"`}
-                onDelete={handleClearSearch}
-                deleteIcon={<ClearRoundedIcon />}
-                size="small"
-                sx={{
-                  bgcolor: alpha("#667eea", 0.1),
-                  color: "#4a5568",
-                  border: "1px solid",
-                  borderColor: alpha("#667eea", 0.2),
-                  fontWeight: 500,
-                }}
-              />
-            </Box>
-          </Fade>
-        )}
 
         {/* Data Area */}
         <Fade in={true} timeout={1000}>
           <Paper
             sx={{
               borderRadius: 4,
-              boxShadow: "0 25px 50px -12px rgba(0,0,0,0.15)",
               border: "1px solid",
-              borderColor: alpha("#e2e8f0", 0.5),
+              borderColor: "divider",
               overflow: "hidden",
-              background: "rgba(255, 255, 255, 0.95)",
-              backdropFilter: "blur(10px)",
+              bgcolor: "background.paper",
             }}
           >
-            <Box
-              sx={{
-                borderBottom: 1,
-                borderColor: alpha("#e2e8f0", 0.5),
-                bgcolor: "#ffffff",
-                px: 2,
-              }}
-            >
+            <Box sx={{ borderBottom: 1, borderColor: "divider", bgcolor: mode === 'dark' ? alpha(theme.palette.common.black, 0.2) : theme.palette.common.white, px: 2 }}>
               <Tabs
                 value={tabValue}
                 onChange={(e, val) => setTabValue(val)}
                 textColor="inherit"
                 sx={{
                   "& .MuiTab-root": {
-                    py: 3,
-                    px: 4,
-                    fontSize: "1rem",
-                    fontWeight: 600,
-                    color: "#718096",
-                    textTransform: "none",
+                    py: 3, px: 4, fontSize: "1rem", fontWeight: 600, color: "text.secondary", textTransform: "none",
                   },
                   "& .Mui-selected": {
-                    color: "#667eea !important",
-                    fontWeight: 700,
+                    color: "primary.main", fontWeight: 700,
                   },
                   "& .MuiTabs-indicator": {
-                    backgroundColor: "#667eea",
-                    height: 3,
+                    backgroundColor: "primary.main", height: 3,
                   },
                 }}
               >
-                <Tab
-                  label={
-                    <Box display="flex" alignItems="center" gap={1}>
-                      <CheckCircleRoundedIcon fontSize="small" />
-                      Passed Inspections
-                    </Box>
-                  }
-                  value="OK"
-                />
-                <Tab
-                  label={
-                    <Box display="flex" alignItems="center" gap={1}>
-                      <ErrorRoundedIcon fontSize="small" />
-                      Failed Inspections
-                    </Box>
-                  }
-                  value="NG"
-                />
+                <Tab label={<Box display="flex" alignItems="center" gap={1}><CheckCircleRoundedIcon fontSize="small" />Passed Inspections</Box>} value="OK" />
+                <Tab label={<Box display="flex" alignItems="center" gap={1}><ErrorRoundedIcon fontSize="small" />Failed Inspections</Box>} value="NG" />
               </Tabs>
             </Box>
-            <Box sx={{ bgcolor: "#ffffff" }}>
-              <BatteryTable
-                status={tabValue}
-                searchTerm={debouncedSearchTerm}
-              />
+            <Box sx={{ bgcolor: "background.paper" }}>
+              <BatteryTable status={tabValue} searchTerm={debouncedSearchTerm} />
             </Box>
           </Paper>
         </Fade>
-
-        {/* Footer */}
-        <Box
-          component="footer"
-          sx={{ mt: 4, textAlign: "center", color: "#718096" }}
-        >
-          <Typography variant="caption">
-            © {new Date().getFullYear()} Battery Inspection System • All rights
-            reserved
-          </Typography>
-        </Box>
       </Container>
     </Box>
+  );
+};
+
+// Export the wrapped App
+const App: React.FC = () => {
+  return (
+    <ThemeContextProvider>
+      <DashboardContent />
+    </ThemeContextProvider>
   );
 };
 
